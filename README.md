@@ -1,2 +1,19 @@
-# dusk-talk
-一日の終わりに、気持ちを読み取って問い返し、空の色で映してくれる内省チャット
+# Dusk Talk
+
+
+
+- ▶ **Try it:** https://hironux.github.io/dusk-talk/
+
+## About
+
+See the app and [IDEA.md](IDEA.md) (the idea log, in Japanese).
+
+## How it was made
+
+Built by shaping the idea together with AI (Claude) and publishing the AI-written code.
+The full conversation is in [IDEA.md](IDEA.md) (Japanese).
+
+## Files
+
+- `index.html` — the app (a single self-contained file)
+- `IDEA.md` — the idea log

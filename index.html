@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data: blob:; font-src data:; media-src data: blob:; base-uri 'none'; form-action 'none'">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk Talk</title>
+<style>
+:root{--ink:#3d2a56;--glass:rgba(35,22,60,.42);--ring:#ffd76a}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP","Segoe UI",sans-serif;color:#fff;background:#2b2150;overflow:hidden}
+button,input{font:inherit}
+:focus-visible{outline:3px solid var(--ring);outline-offset:2px}
+.sky{position:fixed;inset:0;z-index:0}
+.sky-layer{position:absolute;inset:0;opacity:0;transition:opacity 1.8s ease}
+.sky-layer.on{opacity:1}
+.sky::after{content:"";position:absolute;inset:0;background:linear-gradient(rgba(20,10,40,.28),transparent 35%,rgba(10,5,30,.18))}
+.stars{position:absolute;inset:0;opacity:.3;transition:opacity 1.8s ease;z-index:1;
+background:
+radial-gradient(1.5px 1.5px at 12% 18%,#fff,transparent),radial-gradient(1px 1px at 28% 8%,#fff,transparent),
+radial-gradient(2px 2px at 44% 22%,#fff,transparent),radial-gradient(1px 1px at 63% 12%,#fff,transparent),
+radial-gradient(1.5px 1.5px at 78% 30%,#fff,transparent),radial-gradient(1px 1px at 90% 10%,#fff,transparent),
+radial-gradient(1px 1px at 8% 44%,#fff,transparent),radial-gradient(1.5px 1.5px at 35% 40%,#fff,transparent),
+radial-gradient(1px 1px at 55% 5%,#fff,transparent),radial-gradient(1.5px 1.5px at 93% 48%,#fff,transparent);
+animation:twinkle 5s ease-in-out infinite alternate}
+@keyframes twinkle{from{filter:brightness(.75)}to{filter:brightness(1.3)}}
+.orb{position:fixed;z-index:1;right:6%;top:96px;font-size:84px;line-height:1;opacity:.9;pointer-events:none;animation:bob 7s ease-in-out infinite;filter:drop-shadow(0 6px 24px rgba(255,255,255,.35))}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+#app{position:relative;z-index:2;display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:680px;margin:0 auto}
+header{padding:14px 16px 6px;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.top{display:flex;align-items:center;gap:8px}
+h1{font-size:20px;margin:0;flex:1;letter-spacing:.5px}
+h1 small{display:block;font-size:12px;font-weight:400;opacity:.92;letter-spacing:0;margin-top:2px}
+.gbtn{background:var(--glass);color:#fff;border:1px solid rgba(255,255,255,.3);border-radius:999px;padding:8px 12px;cursor:pointer;font-size:13px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);min-height:38px}
+.gbtn:hover{background:rgba(35,22,60,.6)}
+.lang span{padding:2px 6px;border-radius:999px;opacity:.7}
+.lang span.act{background:#fff;color:var(--ink);opacity:1;font-weight:700}
+.pill{margin-top:10px;width:100%;text-align:left;display:flex;align-items:center;gap:8px;font-size:12.5px;text-shadow:none}
+.pill .chev{margin-left:auto;opacity:.8;transition:transform .2s}
+.pill[aria-expanded=true] .chev{transform:rotate(180deg)}
+#legend{display:none;margin-top:8px;background:var(--glass);border:1px solid rgba(255,255,255,.25);border-radius:16px;padding:10px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#legend.open{display:block}
+#legend p{margin:0 0 8px;font-size:12px;opacity:.9}
+.lg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.lg button{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:#fff;border-radius:12px;padding:6px 8px;cursor:pointer;font-size:12px;text-align:left}
+.lg button:hover{background:rgba(255,255,255,.24)}
+.sw{width:22px;height:22px;border-radius:50%;flex:none;border:1.5px solid rgba(255,255,255,.7)}
+#chat{flex:1;overflow-y:auto;padding:12px 16px 8px;display:flex;flex-direction:column;gap:12px;scroll-behavior:smooth}
+.row{display:flex;flex-direction:column;animation:rise .45s ease both}
+.row.user{align-items:flex-end}
+.row.bot{align-items:flex-start}
+@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.bubble{max-width:86%;padding:12px 15px;font-size:15px;line-height:1.65;overflow-wrap:anywhere}
+.bubble.bot{background:var(--glass);border:1px solid rgba(255,255,255,.22);border-radius:18px 18px 18px 4px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);text-shadow:0 1px 3px rgba(0,0,0,.25)}
+.bubble.user{background:rgba(255,255,255,.93);color:var(--ink);border-radius:18px 18px 4px 18px}
+.chip{display:inline-flex;align-items:center;gap:5px;background:rgba(255,255,255,.9);color:var(--ink);border-radius:12px;padding:4px 10px;font-size:12px;margin-bottom:6px}
+.typing .bubble{display:flex;gap:5px;padding:14px 16px}
+.typing i{width:7px;height:7px;border-radius:50%;background:#fff;opacity:.4;animation:dot 1.1s infinite}
+.typing i:nth-child(2){animation-delay:.18s}.typing i:nth-child(3){animation-delay:.36s}
+@keyframes dot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.card{background:rgba(255,255,255,.94);color:var(--ink);border-radius:20px;overflow:hidden;width:100%;box-shadow:0 10px 30px rgba(10,5,30,.35)}
+.card .strip{height:86px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.4)}
+.card .strip b{font-size:17px}.card .strip span{font-size:40px}
+.card .body{padding:14px 16px 16px;font-size:14.5px;line-height:1.7}
+.card h3{margin:0 0 6px;font-size:13px;color:#6b5a85;letter-spacing:.3px}
+.mchips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.mchips em{font-style:normal;background:#efe9f7;border-radius:999px;padding:3px 10px;font-size:13px}
+.card p{margin:0 0 12px}
+.card .note{background:#f6f1fb;border-radius:12px;padding:10px 12px}
+.cbtn{background:linear-gradient(135deg,#c76b9a,#6b5ab0);color:#fff;border:0;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:600}
+.cbtn:hover{filter:brightness(1.08)}
+footer{padding:6px 16px 14px}
+#starters{display:flex;gap:8px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:none}
+#starters::-webkit-scrollbar{display:none}
+#starters button{flex:none;background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.4);border-radius:999px;padding:8px 13px;font-size:13px;cursor:pointer;text-shadow:0 1px 3px rgba(0,0,0,.3);background-color:rgba(35,22,60,.35)}
+#starters button:hover{background:rgba(35,22,60,.6)}
+form{display:flex;gap:8px;align-items:center}
+#msg{flex:1;min-width:0;border:0;border-radius:24px;padding:13px 18px;font-size:15px;background:rgba(255,255,255,.95);color:#3a2a50}
+#msg::placeholder{color:#6f5f85}
+#send{width:46px;height:46px;border-radius:50%;border:0;background:linear-gradient(135deg,#ffb88a,#c76b9a);color:#fff;font-size:20px;cursor:pointer;flex:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+#send:disabled{opacity:.5;cursor:default}
+.foot2{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px}
+#toast{font-size:12.5px;min-height:18px;opacity:.95;text-shadow:0 1px 4px rgba(0,0,0,.4);flex:1}
+@media (min-width:700px){.orb{right:calc(50% - 440px);font-size:110px}h1{font-size:24px}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="sky" id="sky" aria-hidden="true"><div class="stars" id="stars"></div></div>
+<div class="orb" id="orb" aria-hidden="true">🌇</div>
+<div id="app">
+<header>
+  <div class="top">
+    <h1>Dusk Talk 🌇<small data-i18n="tagline"></small></h1>
+    <button type="button" class="gbtn lang" id="langBtn" data-demo="lang-switch" data-i18n-aria="langAria"><span id="lj">日本語</span> / <span id="le">EN</span></button>
+    <button type="button" class="gbtn" id="newBtn" data-demo="new-night" data-i18n="newNight"></button>
+  </div>
+  <button type="button" class="gbtn pill" id="pill" data-demo="sky-pill" aria-expanded="false" aria-controls="legend"><span id="pillText"></span><span class="chev" aria-hidden="true">▾</span></button>
+  <div id="legend" data-demo="sky-legend"><p data-i18n="legendHint"></p><div class="lg" id="lg"></div></div>
+</header>
+<main id="chat" role="log" aria-live="polite" data-demo="chat-area"></main>
+<footer>
+  <div id="starters" data-demo="starters"></div>
+  <form id="form" autocomplete="off">
+    <input id="msg" type="text" maxlength="300" data-demo="message-input" data-i18n-ph="placeholder" data-i18n-aria="inputAria">
+    <button type="submit" id="send" data-demo="send-button" data-i18n-aria="send">➤</button>
+  </form>
+  <div class="foot2">
+    <div id="toast" role="status" data-demo="toast"></div>
+    <button type="button" class="gbtn" id="wrapBtn" data-demo="wrap-up" data-i18n="wrap"></button>
+  </div>
+</footer>
+</div>
+<script>
+const MOODS=[
+{id:'neutral',orb:'🌇',face:'💭',c:['#f59e7b','#c76b9a','#4a3a7a'],st:.3},
+{id:'tired',orb:'🌇',face:'😮‍💨',c:['#f7b267','#e0705f','#5a3470'],st:.2},
+{id:'happy',orb:'☀️',face:'😊',c:['#ffd38a','#ff9fb0','#6a7bd0'],st:0},
+{id:'sad',orb:'🌧️',face:'😢',c:['#6a84a3','#44577a','#1d2a48'],st:.35},
+{id:'anxious',orb:'☁️',face:'😰',c:['#8a86b0','#5f5a90','#2f2c55'],st:.4},
+{id:'angry',orb:'🔥',face:'😠',c:['#ff8a5c','#c2384f','#3a1540'],st:.1},
+{id:'lonely',orb:'🌙',face:'🥺',c:['#2d3a6b','#4b4a8f','#14183a'],st:1},
+{id:'calm',orb:'🌄',face:'😌',c:['#a5d8cc','#78aebf','#3f5c8c'],st:.1}
+];
+const MM={};MOODS.forEach(m=>MM[m.id]=m);
+const KW={
+sad:{ja:['悲し','かなし','つらい','辛い','泣','落ち込','凹','ショック','切ない'],en:['sad','cry','crying','depressed','hurt','upset','heartbroken','down$','blue$']},
+anxious:{ja:['不安','心配','緊張','こわ','怖','焦','プレッシャー','ドキドキ'],en:['anxious','worried','worry','nervous','afraid','scared','stress','stressed','uneasy']},
+angry:{ja:['腹が立','むかつ','ムカ','イライラ','いらいら','怒','許せ','納得いかない'],en:['angry','annoyed','furious','irritated','frustrated','pissed','mad$']},
+lonely:{ja:['寂し','さびし','孤独','ひとり','一人','独り'],en:['lonely','alone','left out','isolated','lonesome']},
+tired:{ja:['疲れ','つかれ','しんど','だるい','眠い','ねむ','くたくた','きつい','長くて'],en:['tired','exhaust','drained','sleepy','worn out','burned out','long meeting','weary']},
+happy:{ja:['嬉し','うれし','楽し','たのし','最高','よかった','良かった','幸せ','しあわせ','やった','ありがとう','誇'],en:['happy','glad','fun','great','awesome','joy','excited','proud','thank','wonderful','love']},
+calm:{ja:['穏やか','のんびり','ほっと','落ち着','ゆっくり','平和','安心','静かに'],en:['calm','peaceful','relax','relieved','quiet','cozy','content','chill']}
+};
+const I18N={
+ja:{
+title:'Dusk Talk｜夕暮れの対話',tagline:'夕暮れに、そっと話そう',newNight:'🔄 新しい夜',langAria:'言語を切り替える：日本語 / English',
+placeholder:'ここに気持ちを書いてみて…',inputAria:'今日のことを書く',send:'送信',wrap:'🌙 今日をしめくくる',
+skyLabel:'今の気持ちの空：{m}＝{s}',legendHint:'気持ちと空の色の組み合わせ。タップで空を見てみよう',
+sensed:'気持ち：{m} を感じ取りました',typing:'考えています',
+greet:'おつかれさま。今日はどんな一日でしたか？',
+starters:['今日は会議が長くて疲れた','友だちに会えて嬉しかった','明日のことが少し不安','ひとりで静かな夜になった'],
+toastEmpty:'ひとことだけでも、書いてみてね。',toastMore:'もう少しお話ししてから、しめくくりましょう。',
+toastHint:'そろそろ、今日をしめくくってみませんか？ 🌙',toastNew:'新しい夜をはじめました。',
+sumTitle:'今夜の空',sumMoods:'今日、感じ取った気持ち',sumTalked:'{n}回、言葉にしました。',sumTmr:'明日のあなたへ',sumNew:'🌙 新しい夜をはじめる',sumGood:'おやすみなさい',
+mood:{neutral:['静かな思い','たそがれ'],tired:['疲れ','夕焼け'],happy:['嬉しさ','夜明け'],sad:['かなしみ','雨空'],anxious:['不安','霞む空'],angry:['いらだち','燃える空'],lonely:['さびしさ','月夜'],calm:['安らぎ','凪の朝']},
+close:{
+neutral:'静かに今日を見つめた夜でした。言葉にしただけで、気持ちは少し整います。',
+tired:'今日はたくさん力を使いましたね。夕焼けの色のまま、ゆっくり休んでください。',
+happy:'うれしい光が残る一日でしたね。その明るさを、そっと胸にしまって眠りましょう。',
+sad:'つらさを言葉にできたのは、とても大切なことです。雨のあとには、静かな朝が来ます。',
+anxious:'気がかりを外に出せましたね。霞んだ空も、夜が深まればすこしずつ晴れていきます。',
+angry:'まっすぐな気持ちがあった一日でした。燃えた空も、やがて静かな夜になります。',
+lonely:'さびしさを話してくれてありがとう。月はいつも、同じ空で見守っています。',
+calm:'穏やかな時間を味わえた一日でした。その凪を、明日にも少し持っていきましょう。'},
+tmr:{
+neutral:'朝いちばんに、今日の気づきをひとつ思い出してみて。',
+tired:'明日は、ひと息つく時間を5分だけ先に予定に入れてみましょう。',
+happy:'今日の嬉しかったことを、誰かにひとこと伝えてみましょう。',
+sad:'明日は、自分に優しいことをひとつだけ選んでみましょう。',
+anxious:'気がかりを、明日できる小さな一歩に分けてみましょう。',
+angry:'まず深呼吸をひとつ。伝えたいことは、短く一文にしてみましょう。',
+lonely:'明日、誰かに「おはよう」を送ってみましょう。',
+calm:'今日の穏やかさを思い出す、お気に入りの合図を決めておきましょう。'},
+rp:{
+neutral:{emp:['話してくれてありがとう。','うん、聞いていますよ。'],ask:['その中で、いちばん心に残っている場面はどこですか？','そのとき、あなたはどんなことを感じていましたか？'],deep:['もう少し詳しく聞かせてもらえますか？','それは、なぜ心に残ったのだと思いますか？','明日の自分に、ひとこと伝えるとしたら何でしょう？']},
+tired:{emp:['それはおつかれさまでした。','がんばった一日でしたね。'],ask:['いちばん力を使ったのは、どの場面でしたか？','疲れの中で、少しでもほっとした瞬間はありましたか？'],deep:['その疲れは、体と心のどちらに近いですか？','今夜、自分にしてあげたいことはありますか？','それほど力を使ったのは、なぜだと思いますか？']},
+happy:{emp:['それは素敵ですね。','聞いていて、わたしも嬉しくなりました。'],ask:['何がいちばん嬉しかったのでしょう？','その瞬間、誰かと分け合いたいと思いましたか？'],deep:['それが嬉しかったのは、なぜだと思いますか？','その気持ちを明日にも持っていくには、何ができそうですか？','もう少し、その場面を詳しく教えてください。']},
+sad:{emp:['それは、つらかったですね。','ここでは、無理に元気にならなくて大丈夫です。'],ask:['よければ、何があったのか聞かせてください。','いま、その気持ちは心のどのあたりにありますか？'],deep:['その悲しさは、何を大切にしていたから生まれたのでしょう？','今夜、少しでも心がゆるむことは何ですか？','もう少し、話せそうなことはありますか？']},
+anxious:{emp:['気がかりがあると、落ち着かないですよね。','話してくれてありがとう。'],ask:['いちばん気になっているのは、どんなことですか？','その不安は、いつ頃から心にありましたか？'],deep:['それは今夜のうちに決められることですか？それとも明日以降ですか？','いちばんありそうな展開は、どんなものでしょう？','いま、自分にかけてあげたい言葉は何ですか？']},
+angry:{emp:['それは腹が立ちますよね。','その怒りには、きっと理由がありますね。'],ask:['何が、いちばん許せなかったのでしょう？','そのとき、本当は何を分かってほしかったですか？'],deep:['その怒りの奥には、どんな大切なものがありそうですか？','それは、なぜそこまで気になったのだと思いますか？','深呼吸をひとつしたら、言葉が少し変わりそうですか？']},
+lonely:{emp:['ひとりの夜は、静かすぎることもありますね。','話してくれて、ありがとう。いまはここにいますよ。'],ask:['そう感じたのは、どんなときでしたか？','いま、誰かの声が聞けるとしたら、誰の声でしょう？'],deep:['そのさびしさは、何を求めているのだと思いますか？','明日、小さくつながれそうなことはありますか？','もう少し、そのときのことを聞かせてください。']},
+calm:{emp:['穏やかな時間があったのですね。','それは、いい夜ですね。'],ask:['その落ち着きは、何から来ていると思いますか？','その静けさの中で、どんなことを考えていましたか？'],deep:['その穏やかさを、また味わうには何が必要でしょう？','それは、なぜ今日は訪れたのだと思いますか？','もう少し、その時間のことを聞かせてください。']}
+}},
+en:{
+title:'Dusk Talk | A quiet talk at dusk',tagline:'Let\u2019s talk softly at dusk',newNight:'🔄 New night',langAria:'Switch language: 日本語 / English',
+placeholder:'Write how you feel here…',inputAria:'Write about your day',send:'Send',wrap:'🌙 Wrap up the day',
+skyLabel:'Sky of your mood: {m} = {s}',legendHint:'Each feeling has its own sky. Tap one to see it.',
+sensed:'Sensed feeling: {m}',typing:'Thinking',
+greet:'Good work today. How was your day?',
+starters:['Today\u2019s meeting was so long and I\u2019m tired','I\u2019m happy I got to see my friend','I\u2019m a little worried about tomorrow','It was a quiet, lonely night'],
+toastEmpty:'Even one word is okay. Try writing something.',toastMore:'Let\u2019s talk a little more before we wrap up.',
+toastHint:'Shall we wrap up your day soon? 🌙',toastNew:'A new night has begun.',
+sumTitle:'Tonight\u2019s sky',sumMoods:'Feelings I sensed today',sumTalked:'You put it into words {n} time(s).',sumTmr:'A note for tomorrow',sumNew:'🌙 Start a new night',sumGood:'Good night',
+mood:{neutral:['Quiet thoughts','Dusk'],tired:['Tired','Sunset'],happy:['Joy','Sunrise'],sad:['Sadness','Rainy sky'],anxious:['Anxiety','Hazy sky'],angry:['Anger','Ember sky'],lonely:['Loneliness','Moonlit night'],calm:['Calm','Still dawn']},
+close:{
+neutral:'You looked at your day quietly tonight. Putting it into words already helps your heart settle.',
+tired:'You used a lot of energy today. Rest slowly, in the colors of the sunset.',
+happy:'A day with a warm glow. Tuck that brightness into your heart and sleep well.',
+sad:'It matters that you could say what hurt. After the rain, a quiet morning comes.',
+anxious:'You let your worries out. Even a hazy sky clears bit by bit as the night deepens.',
+angry:'You had strong feelings today. Even a burning sky turns into a calm night.',
+lonely:'Thank you for sharing your loneliness. The moon is always watching in the same sky.',
+calm:'You were able to enjoy a peaceful time. Carry a little of that calm into tomorrow.'},
+tmr:{
+neutral:'First thing tomorrow, remember one thing you noticed today.',
+tired:'Tomorrow, put a 5-minute break on your schedule before anything else.',
+happy:'Tell someone about what made you happy today.',
+sad:'Tomorrow, pick just one kind thing to do for yourself.',
+anxious:'Break your worry into one small step you can take tomorrow.',
+angry:'Take one deep breath first. Then try saying what you need in one short sentence.',
+lonely:'Tomorrow, send someone a simple \u201cgood morning.\u201d',
+calm:'Choose a small favorite signal that brings today\u2019s calm back.'},
+rp:{
+neutral:{emp:['Thank you for sharing.','Mm, I\u2019m listening.'],ask:['Which moment stays with you the most?','What were you feeling at that time?'],deep:['Could you tell me a little more?','Why do you think that stayed with you?','If you could tell tomorrow\u2019s you one thing, what would it be?']},
+tired:{emp:['Thank you for your hard work today.','You gave a lot today.'],ask:['Which moment took the most energy?','Even in the tiredness, was there a moment you felt a bit relieved?'],deep:['Is the tiredness more in your body or in your mind?','Is there something you\u2019d like to do for yourself tonight?','Why do you think it took so much out of you?']},
+happy:{emp:['That sounds lovely.','I felt happy just hearing that.'],ask:['What made you happiest?','In that moment, did you want to share it with someone?'],deep:['Why do you think that made you so happy?','What could help you carry that feeling into tomorrow?','Tell me a bit more about that moment.']},
+sad:{emp:['That sounds really hard.','You don\u2019t have to cheer up here.'],ask:['If you like, tell me what happened.','Where do you feel that feeling in your heart right now?'],deep:['What did you care about that made this sadness?','What is one thing that softens your heart, even a little, tonight?','Is there more you feel like sharing?']},
+anxious:{emp:['It\u2019s hard to relax when something is on your mind.','Thank you for telling me.'],ask:['What is bothering you the most?','Since when has this worry been with you?'],deep:['Can it be decided tonight, or is it for tomorrow and later?','What do you think is the most likely way it will go?','What would you like to say to yourself right now?']},
+angry:{emp:['That would make me angry too.','There must be a reason behind that anger.'],ask:['What felt the hardest to accept?','What did you really want them to understand?'],deep:['What important thing might be behind that anger?','Why do you think it bothered you so much?','If you take one deep breath, do the words change a little?']},
+lonely:{emp:['A night alone can feel too quiet.','Thank you for telling me. I\u2019m here with you now.'],ask:['When did you start feeling that way?','If you could hear someone\u2019s voice now, whose would it be?'],deep:['What do you think this loneliness is asking for?','Is there a small way to connect with someone tomorrow?','Tell me a little more about that moment.']},
+calm:{emp:['So you had a peaceful moment.','That sounds like a good night.'],ask:['Where do you think that calm came from?','What were you thinking about in that quiet?'],deep:['What would you need to feel that calm again?','Why do you think it came to you today?','Tell me a little more about that time.']}
+}}};
+const ORDER=['sad','anxious','angry','lonely','tired','happy','calm'];
+let lang='en',msgs=[],cur='neutral',busy=false,hinted=false,toastT=null;
+const $=s=>document.querySelector(s);
+const chat=$('#chat');
+function initLang(){
+  let l=null;
+  if(window.APP_LANG==='ja'||window.APP_LANG==='en')l=window.APP_LANG;
+  if(!l){try{const q=new URLSearchParams(location.search).get('lang');if(q==='ja'||q==='en')l=q}catch(e){}}
+  if(!l){try{const s=localStorage.getItem('lang');if(s==='ja'||s==='en')l=s}catch(e){}}
+  lang=l||'en';
+}
+const T=()=>I18N[lang];
+function fmt(s,o){return s.replace(/\{(\w+)\}/g,(_,k)=>o[k])}
+function save(){try{localStorage.setItem('dusktalk_v1',JSON.stringify({msgs,cur}))}catch(e){}}
+function load(){try{const d=JSON.parse(localStorage.getItem('dusktalk_v1')||'null');if(d&&Array.isArray(d.msgs)&&d.msgs.length){msgs=d.msgs;cur=MM[d.cur]?d.cur:'neutral'}}catch(e){}}
+function buildSky(){
+  const sky=$('#sky'),st=$('#stars');
+  MOODS.forEach(m=>{const d=document.createElement('div');d.className='sky-layer';d.id='sky-'+m.id;d.style.background=`linear-gradient(180deg,${m.c[0]},${m.c[1]} 58%,${m.c[2]})`;sky.insertBefore(d,st)});
+}
+function setSky(id){
+  cur=id;const m=MM[id];
+  MOODS.forEach(x=>$('#sky-'+x.id).classList.toggle('on',x.id===id));
+  $('#stars').style.opacity=m.st;$('#orb').textContent=m.orb;
+  updatePill();
+}
+function updatePill(){
+  const m=MM[cur],n=T().mood[cur];
+  $('#pillText').textContent=m.orb+' '+fmt(T().skyLabel,{m:n[0],s:n[1]});
+}
+function renderLegend(){
+  const lg=$('#lg');lg.innerHTML='';
+  MOODS.forEach(m=>{
+    const b=document.createElement('button');b.type='button';b.setAttribute('data-demo','legend-'+m.id);
+    const sw=document.createElement('span');sw.className='sw';sw.style.background=`linear-gradient(180deg,${m.c[0]},${m.c[2]})`;
+    const t=document.createElement('span');const n=T().mood[m.id];t.textContent=m.face+' '+n[0]+'＝'+n[1];
+    b.append(sw,t);b.onclick=()=>setSky(m.id);lg.appendChild(b);
+  });
+}
+function renderStarters(){
+  const box=$('#starters');box.innerHTML='';
+  if(msgs.some(m=>m.r==='u'))return;
+  T().starters.forEach((s,i)=>{
+    const b=document.createElement('button');b.type='button';b.textContent=s;b.setAttribute('data-demo','starter-'+(i+1));
+    b.onclick=()=>send(s);box.appendChild(b);
+  });
+}
+function mkRow(cls){const r=document.createElement('div');r.className='row '+cls;return r}
+function buildNode(m){
+  const d=T();
+  if(m.r==='u'){const r=mkRow('user');const b=document.createElement('div');b.className='bubble user';b.textContent=m.t;r.appendChild(b);return r}
+  if(m.r==='g'){const r=mkRow('bot');const b=document.createElement('div');b.className='bubble bot';b.textContent=d.greet;r.appendChild(b);return r}
+  if(m.r==='b'){
+    const r=mkRow('bot');const c=document.createElement('div');c.className='chip';
+    c.textContent=MM[m.mood].face+' '+fmt(d.sensed,{m:d.mood[m.mood][0]});
+    const p=d.rp[m.mood];const b=document.createElement('div');b.className='bubble bot';
+    const q=(m.deep?p.deep:p.ask);
+    b.textContent=p.emp[m.e%p.emp.length]+(lang==='ja'?'':' ')+q[m.q%q.length];
+    r.append(c,b);return r;
+  }
+  if(m.r==='s'){
+    const r=mkRow('bot');const mo=MM[m.dom];const card=document.createElement('div');card.className='card';card.setAttribute('data-demo','summary-card');
+    const strip=document.createElement('div');strip.className='strip';strip.style.background=`linear-gradient(135deg,${mo.c[0]},${mo.c[1]},${mo.c[2]})`;
+    const sb=document.createElement('b');sb.textContent=d.sumTitle+'：'+d.mood[m.dom][1];const ss=document.createElement('span');ss.textContent=mo.orb;strip.append(sb,ss);
+    const body=document.createElement('div');body.className='body';
+    const h=document.createElement('h3');h.textContent=d.sumMoods;
+    const mc=document.createElement('div');mc.className='mchips';
+    m.counts.forEach(([id,n])=>{const e=document.createElement('em');e.textContent=MM[id].face+' '+d.mood[id][0]+' ×'+n;mc.appendChild(e)});
+    const p1=document.createElement('p');p1.textContent=d.close[m.dom];
+    const nt=document.createElement('div');nt.className='note';
+    const h2=document.createElement('h3');h2.textContent=d.sumTmr;const p2=document.createElement('p');p2.style.margin='0';p2.textContent=d.tmr[m.dom];nt.append(h2,p2);
+    const p3=document.createElement('p');p3.style.cssText='margin:12px 0;color:#6b5a85;font-size:13px';p3.textContent=fmt(d.sumTalked,{n:m.n})+' '+d.sumGood+' 🌙';
+    const nb=document.createElement('button');nb.type='button';nb.className='cbtn';nb.textContent=d.sumNew;nb.setAttribute('data-demo','summary-new');nb.onclick=newNight;
+    body.append(h,mc,p1,nt,p3,nb);card.append(strip,body);r.appendChild(card);return r;
+  }
+}
+function scrollEnd(){chat.scrollTop=chat.scrollHeight}
+function renderAll(){chat.innerHTML='';msgs.forEach(m=>chat.appendChild(buildNode(m)));scrollEnd();renderStarters()}
+function append(m){msgs.push(m);chat.appendChild(buildNode(m));scrollEnd();save()}
+function detect(text){
+  const low=text.toLowerCase(),tok=low.split(/[^a-z']+/).filter(Boolean);
+  let best='neutral',bs=0;
+  ORDER.forEach(id=>{
+    let s=0;
+    KW[id].ja.forEach(k=>{if(low.includes(k))s++});
+    KW[id].en.forEach(k=>{
+      if(k.includes(' ')){if(low.includes(k))s++}
+      else if(k.endsWith('$')){if(tok.includes(k.slice(0,-1)))s++}
+      else if(tok.some(t=>t.startsWith(k)))s++;
+    });
+    if(s>bs){bs=s;best=id}
+  });
+  return best;
+}
+function toast(txt){
+  const t=$('#toast');t.textContent=txt;clearTimeout(toastT);toastT=setTimeout(()=>{t.textContent=''},3800);
+}
+function showTyping(){
+  const r=mkRow('bot typing');r.id='typing';const b=document.createElement('div');b.className='bubble bot';b.setAttribute('aria-label',T().typing);
+  b.innerHTML='<i></i><i></i><i></i>';r.appendChild(b);chat.appendChild(r);scrollEnd();
+}
+function send(text){
+  text=(text||'').trim();
+  if(!text){toast(T().toastEmpty);return}
+  if(busy)return;
+  busy=true;$('#send').disabled=true;
+  const mood=detect(text);
+  append({r:'u',t:text,m:mood});setSky(mood);renderStarters();
+  const n=msgs.filter(m=>m.r==='u').length;
+  showTyping();
+  setTimeout(()=>{
+    const ty=$('#typing');if(ty)ty.remove();
+    append({r:'b',mood:mood,e:text.length+n,q:text.length+n,deep:n>1});
+    busy=false;$('#send').disabled=false;
+    if(n>=3&&!hinted){hinted=true;toast(T().toastHint)}
+    $('#msg').focus({preventScroll:true});
+  },1100);
+}
+function wrapUp(){
+  const us=msgs.filter(m=>m.r==='u');
+  if(us.length<2){toast(T().toastMore);return}
+  if(msgs.length&&msgs[msgs.length-1].r==='s')return;
+  const c={};us.forEach(m=>{c[m.m]=(c[m.m]||0)+1});
+  let ids=Object.keys(c);const non=ids.filter(i=>i!=='neutral');if(non.length)ids=non.concat(ids.filter(i=>i==='neutral'));
+  const dom=ids.slice().sort((a,b)=>c[b]-c[a])[0];
+  const counts=ids.map(i=>[i,c[i]]);
+  setSky(dom);append({r:'s',counts:counts,dom:dom,n:us.length});
+}
+function newNight(){
+  msgs=[{r:'g'}];hinted=false;busy=false;$('#send').disabled=false;
+  const ty=$('#typing');if(ty)ty.remove();
+  setSky('neutral');renderAll();save();toast(T().toastNew);
+}
+function applyI18N(){
+  const d=T();document.documentElement.lang=lang;document.title=d.title;
+  document.querySelectorAll('[data-i18n]').forEach(e=>{e.textContent=d[e.dataset.i18n]});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{e.placeholder=d[e.dataset.i18nPh]});
+  document.querySelectorAll('[data-i18n-aria]').forEach(e=>{e.setAttribute('aria-label',d[e.dataset.i18nAria])});
+  $('#lj').classList.toggle('act',lang==='ja');$('#le').classList.toggle('act',lang==='en');
+}
+function setLang(l){
+  lang=l;try{localStorage.setItem('lang',l)}catch(e){}
+  applyI18N();updatePill();renderLegend();renderAll();$('#toast').textContent='';
+}
+initLang();buildSky();load();
+if(!msgs.length)msgs=[{r:'g'}];
+setSky(cur);applyI18N();renderLegend();renderAll();
+$('#form').addEventListener('submit',e=>{e.preventDefault();const i=$('#msg'),v=i.value;if(!v.trim()){toast(T().toastEmpty);return}if(busy)return;i.value='';send(v)});
+$('#langBtn').onclick=()=>setLang(lang==='ja'?'en':'ja');
+$('#newBtn').onclick=newNight;
+$('#wrapBtn').onclick=wrapUp;
+$('#pill').onclick=()=>{const o=$('#legend').classList.toggle('open');$('#pill').setAttribute('aria-expanded',o)};
+</script>
+</body>
+</html>

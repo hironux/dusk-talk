@@ -3,6 +3,7 @@
 
 
 - ▶ **Try it:** https://hironux.github.io/dusk-talk/
+- 🎬 **Demo video:** https://hironux.github.io/dusk-talk/demo.mp4
 
 ## About
 
